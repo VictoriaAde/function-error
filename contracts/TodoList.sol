@@ -1,42 +1,33 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+// SPDX-License-Identifier: NONE
 pragma solidity ^0.8.9;
 
 contract TodoList {
     struct Task {
-        string description;
+        uint256 id;
+        string content;
         bool completed;
+        address creator;
     }
 
-    // declares a public array named tasks of type Task
-    Task[] public tasks;
+    mapping(uint256 => Task) public tasks;
 
-    event TaskCreated(string description);
-    event TaskCompleted(uint256 taskId);
+    uint256 public taskCount;
 
-    function createTask(string memory _description) public {        
-        if (bytes(_description).length == 0) {
-            revert("Description cannot be empty");
-        }
-        tasks.push(Task(_description, false));
-        emit TaskCreated(_description);
+    event TaskCreated(uint256 id, string content, bool completed, address creator);
+    event TaskCompleted(uint256 id, bool completed);
+
+    function createTask(string memory _content) public {
+        require(bytes(_content).length > 0, "Content cannot be empty"); // Ensure content is not empty
+        taskCount++;
+        tasks[taskCount] = Task(taskCount, _content, false, msg.sender);
+        emit TaskCreated(taskCount, _content, false, msg.sender);
     }
 
-    function completeTask(uint256 _taskId) public {
-        require(_taskId < tasks.length, "Task does not exist");
-        require(!tasks[_taskId].completed, "Task already completed");
-
-        tasks[_taskId].completed = true;
-        emit TaskCompleted(_taskId);
+    function toggleCompleted(uint256 _taskId) public {
+        require(_taskId > 0 && _taskId <= taskCount, "Invalid taskId"); // Ensure valid taskId
+        Task storage task = tasks[_taskId];
+        assert(task.id == _taskId); // Assert task ID matches requested taskId
+        task.completed = !task.completed;
+        emit TaskCompleted(_taskId, task.completed);
     }
-
-    function viewAllTasks() public view returns (string[] memory) {
-        string[] memory allTasks = new string[](tasks.length);
-
-        for (uint256 i = 0; i < tasks.length; i++) {
-            allTasks[i] = tasks[i].description;
-        }
-        
-        return allTasks;
-    }
-
 }
