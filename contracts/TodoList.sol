@@ -17,16 +17,18 @@ contract TodoList {
     event TaskCompleted(uint256 id, bool completed);
 
     function createTask(string memory _content) public {
-        require(bytes(_content).length > 0, "Content cannot be empty"); // Ensure content is not empty
+        if (bytes(_content).length == 0) {
+                revert("Content cannot be empty"); 
+        }        
         taskCount++;
         tasks[taskCount] = Task(taskCount, _content, false, msg.sender);
         emit TaskCreated(taskCount, _content, false, msg.sender);
     }
 
     function toggleCompleted(uint256 _taskId) public {
-        require(_taskId > 0 && _taskId <= taskCount, "Invalid taskId"); // Ensure valid taskId
+        require(_taskId > 0 && _taskId <= taskCount, "Invalid taskId"); // Ensure taskId is valid
         Task storage task = tasks[_taskId];
-        assert(task.id == _taskId); // Assert task ID matches requested taskId
+        assert(task.id == _taskId); // task ID must match requested taskId
         task.completed = !task.completed;
         emit TaskCompleted(_taskId, task.completed);
     }
